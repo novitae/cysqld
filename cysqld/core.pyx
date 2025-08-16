@@ -1,5 +1,5 @@
 from io import BufferedReader, SEEK_CUR
-from typing import cast
+from typing import Optional, Callable
 from cpython.bytes cimport PyBytes_GET_SIZE
 
 __all__ = ("Parser", )
@@ -8,14 +8,17 @@ cdef class Parser:
     cdef object _reader
     cdef str path
     cdef dict tables
+    cdef object decode_callback
 
-    def __cinit__(self, path: str):
+    def __cinit__(self, path: str, decode_callback: Optional[Callable[[bytes], str]] = None):
         self.path = path
+        self.reader = None
         self.tables = {}
+        self.decode_callback = bytes.decode if decode_callback is None else decode_callback
 
     @property
-    def reader(self):
-        return cast(BufferedReader, self._reader)
+    def reader(self) -> Optional[BufferedReader]:
+        return self._reader
 
     @reader.setter
     def reader(self, value: BufferedReader):
@@ -47,13 +50,12 @@ cdef class Parser:
         return bytes(out)
 
     cdef bint _consume_attempt(self, bytes term):
-        cdef long start_pos = self._tell()
         cdef unsigned char b
         cdef Py_ssize_t i, n = PyBytes_GET_SIZE(term)
         for i in range(n):
             b = self.reader.read(1)[0]
             if b != term[i]:
-                self.reader.seek(start_pos)
+                self.reader.seek(int(i) - 1, SEEK_CUR)
                 return False
         return True
 
@@ -116,7 +118,7 @@ cdef class Parser:
             if is_fields is True and char == b"`":
                 value = self._parse_string(b"`", consumed_first=False).decode()
             elif is_fields is False and char == b"'":
-                value = self._parse_string(b"'", consumed_first=False).decode()
+                value = self.decode_callback(self._parse_string(b"'", consumed_first=False))
             elif is_fields is False and (char.isdigit() or char == b"-"):
                 value = self._parse_int()
             elif is_fields is False and char == b"N":
@@ -219,11 +221,13 @@ cdef class Parser:
                     yield from self._parse_insert_into(start_pos=start_pos)
                 elif line.startswith(b"CREATE "):
                     self._parse_create_table(start_pos=start_pos)
-        except AssertionError as err:
+        except Exception as err:
             err.add_note(f"{self._tell()=}, {self.reader.read(0x20)=}")
             raise err
 
     def parse(self):
-        with open(self.path, "rb") as read, BufferedReader(read, buffer_size=0x8000) as reader:
-            self.reader = cast(BufferedReader, reader)
-            yield from self._parse()
+        with open(self.path, "rb") as read:
+            with BufferedReader(read, buffer_size=0x8000) as reader:
+                self.reader = reader
+                yield from self._parse()
+            self.reader = None

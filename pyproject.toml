@@ -1,6 +1,6 @@
 [project]
 name = "cysqld"
-version = "0.0.1b"
+version = "0.0.2b"
 description = "Add your description here"
 readme = "README.md"
 requires-python = ">=3.11"
@@ -11,6 +11,7 @@ dev = [
     "cython>=3.1.2",
     "ipykernel>=6.30.1",
     "pytest>=8.4.1",
+    "snakeviz>=2.2.2",
 ]
 
 [build-system]
