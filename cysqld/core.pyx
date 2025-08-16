@@ -24,6 +24,13 @@ cdef class Parser:
     def reader(self, value: BufferedReader):
         self._reader = value
 
+    cdef str _decode(self, b: bytes):
+        try:
+            return self.decode_callback(b)
+        except Exception as err:
+            err.add_note(f"Issues while decoding bytes: {b=}")
+            raise err
+
     cdef int _tell(self):
         return self.reader.tell()
 
@@ -118,7 +125,7 @@ cdef class Parser:
             if is_fields is True and char == b"`":
                 value = self._parse_string(b"`", consumed_first=False).decode()
             elif is_fields is False and char == b"'":
-                value = self.decode_callback(self._parse_string(b"'", consumed_first=False))
+                value = self._decode(self._parse_string(b"'", consumed_first=False))
             elif is_fields is False and (char.isdigit() or char == b"-"):
                 value = self._parse_int()
             elif is_fields is False and char == b"N":
@@ -222,7 +229,7 @@ cdef class Parser:
                 elif line.startswith(b"CREATE "):
                     self._parse_create_table(start_pos=start_pos)
         except Exception as err:
-            err.add_note(f"{self._tell()=}, {self.reader.read(0x20)=}")
+            err.add_note(f"File position: {self._tell()}, next 20 chars: {repr(self.reader.read(0x20))}")
             raise err
 
     def parse(self):
