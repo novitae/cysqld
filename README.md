@@ -1,6 +1,6 @@
 # cysqld
 A simple and lightweight cython parser for sql dumps. Features:
-- [x] Is in streaming mode, doesn't load the sql file at once to parse it (use of `io.BufferedReader`).
+- [x] Is in streaming mode, doesn't load the sql file at once to parse it (use of `io.BufferedReader`). Allows to process files from any sizes.
 - [x] Yields the data from all the tables.
 - [x] Automatic detection of tables key to yield data as dict.
 

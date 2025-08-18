@@ -31,7 +31,7 @@ cdef class Parser:
             err.add_note(f"Issues while decoding bytes: {b=}")
             raise err
 
-    cdef int _tell(self):
+    cdef object _tell(self):
         return self.reader.tell()
 
     cdef int _consume_whitespace(self):
@@ -147,7 +147,7 @@ cdef class Parser:
                 break
         return result
 
-    def _parse_insert_into(self, long start_pos):
+    def _parse_insert_into(self, object start_pos):
         self.reader.seek(start_pos)
         assert self._consume_attempt(b"INSERT")
         assert self._consume_whitespace() > 0
@@ -176,7 +176,7 @@ cdef class Parser:
             assert self._consume_attempt(b",")
             self._consume_whitespace()
     
-    cdef void _parse_create_table(self, long start_pos):
+    cdef void _parse_create_table(self, object start_pos):
         self.reader.seek(start_pos)
         assert self._consume_attempt(b"CREATE")
         assert self._consume_whitespace() > 0
@@ -217,7 +217,7 @@ cdef class Parser:
 
     def _parse(self):
         cdef bytes line
-        cdef long start_pos
+        cdef object start_pos
         try:
             while True:
                 start_pos = self._tell()
