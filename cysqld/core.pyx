@@ -195,13 +195,13 @@ cdef class Parser:
                 is_field_def = True
             else:
                 is_field_def = False
-            skipped_bytes = self._consume_safe_until(term=b",", is_field_def=is_field_def)
+            skipped_bytes = self._consume_safe_until(terms=(b",\n", b"\n)"), is_field_def=is_field_def)
             if skipped_bytes.endswith(b")"):
                 break
             assert PyBytes_GET_SIZE(skipped_bytes) > 0
         self.tables[raw_table.decode()] = tuple(map(bytes.decode, fields))
 
-    cdef bytes _consume_safe_until(self, bytes term, bint is_field_def):
+    cdef bytes _consume_safe_until(self, tuple terms, bint is_field_def):
         cdef bytes result = b""
         cdef bytes char
         while True:
@@ -209,9 +209,9 @@ cdef class Parser:
             result += char
             if char == b"(":
                 self._parse_array(is_fields=is_field_def is False)
-            elif char == b"'" or char == b"`":
+            elif char in b"'`":
                 self._parse_string(encloser=char, consumed_first=True)
-            elif char == term or char == b")":
+            elif result.endswith(terms):
                 break
         return result
 
