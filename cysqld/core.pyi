@@ -1,6 +1,6 @@
 from typing import Generator, Any, Optional, Callable
 
-__all__: tuple[str]
+__all__ = ("Parser", )
 
 class Parser:
     def __init__(self, path: str, decode_callback: Optional[Callable[[bytes], str]] = None): ...

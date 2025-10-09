@@ -122,7 +122,7 @@ cdef class Parser:
             self._consume_whitespace()
             char = self.reader.read(1)
             self.reader.seek(-1, SEEK_CUR)
-            if is_fields is True and char == b"`":
+            if char == b"`":
                 value = self._parse_string(b"`", consumed_first=False).decode()
             elif is_fields is False and char == b"'":
                 value = self._decode(self._parse_string(b"'", consumed_first=False))
@@ -182,6 +182,8 @@ cdef class Parser:
         assert self._consume_whitespace() > 0
         assert self._consume_attempt(b"TABLE")
         assert self._consume_whitespace() > 0
+        if self._consume_attempt(b"IF NOT EXISTS"):
+            assert self._consume_whitespace() > 0
         cdef bytes raw_table = self._parse_string(encloser=b"`", consumed_first=False)
         assert self._consume_whitespace() > 0
         assert self._consume_attempt(b"(")
