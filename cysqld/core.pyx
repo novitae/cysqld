@@ -111,7 +111,8 @@ cdef class Parser:
             else:
                 break
         self.reader.seek(-1, SEEK_CUR)
-        return int(result)
+        if result:
+            return int(result)
 
     cdef list _parse_array(self, bint is_fields):
         cdef list result = []
@@ -136,6 +137,10 @@ cdef class Parser:
             else:
                 raise AssertionError(f"{char=}, {is_fields=}")
             self._consume_whitespace()
+            if self._consume_attempt(b"("):
+                # UNIQUE KEY `hello` (`world`(111),`hi`(111)),
+                assert self._parse_int() is not None
+                assert self._consume_attempt(b")")
             if self._consume_attempt(b")"):
                 should_break = True
             elif self._consume_attempt(b","):
@@ -153,10 +158,18 @@ cdef class Parser:
         assert self._consume_whitespace() > 0
         assert self._consume_attempt(b"INTO")
         assert self._consume_whitespace() > 0
-        cdef bytes raw_table = self._parse_string(encloser=b"`", consumed_first=False)
+        cdef bytes raw_table
+        cdef bint is_enclosed_table_name
+        if self._consume_attempt(b"`"):
+            raw_table = self._parse_string(encloser=b"`", consumed_first=False)
+            is_enclosed_table_name = True
+        else:
+            raw_table = self._consume_until(b" ")
+            is_enclosed_table_name = False
         assert PyBytes_GET_SIZE(raw_table) > 0
         cdef str table_name = raw_table.decode()
-        assert self._consume_whitespace() > 0
+        if is_enclosed_table_name:
+            assert self._consume_whitespace() > 0
         cdef tuple spec
         if self._consume_attempt(b"(") is True:
             spec = tuple(self._parse_array(is_fields=True))
