@@ -213,7 +213,7 @@ cdef class Parser:
                 is_field_def = True
             else:
                 is_field_def = False
-            skipped_bytes = self._consume_safe_until(terms=(b",\n", b"\n)"), is_field_def=is_field_def)
+            skipped_bytes = self._consume_safe_until(terms=(b",\n", b"\n)", b",\r\n", b"\r\n)"), is_field_def=is_field_def)
             if skipped_bytes.endswith(b")"):
                 break
             assert PyBytes_GET_SIZE(skipped_bytes) > 0
