@@ -132,6 +132,9 @@ cdef class Parser:
             elif is_fields is False and char == b"N":
                 assert self._consume_attempt(b"NULL")
                 value = None
+            elif is_fields is False and char == b"n":
+                assert self._consume_attempt(b"null")
+                value = None
             elif char == b")": # Empty array
                 break
             else:
