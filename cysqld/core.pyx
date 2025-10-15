@@ -244,7 +244,7 @@ cdef class Parser:
                     break
                 elif line.startswith(b"INSERT "):
                     yield from self._parse_insert_into(start_pos=start_pos)
-                elif line.startswith(b"CREATE "):
+                elif line.startswith(b"CREATE TABLE"):
                     self._parse_create_table(start_pos=start_pos)
         except Exception as err:
             err.add_note(f"File position: {self._tell()}, next 20 chars: {repr(self.reader.read(0x20))}")
