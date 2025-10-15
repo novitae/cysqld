@@ -164,7 +164,7 @@ cdef class Parser:
         cdef bytes raw_table
         cdef bint is_enclosed_table_name
         if self._consume_attempt(b"`"):
-            raw_table = self._parse_string(encloser=b"`", consumed_first=False)
+            raw_table = self._parse_string(encloser=b"`", consumed_first=True)
             is_enclosed_table_name = True
         else:
             raw_table = self._consume_until(b" ")

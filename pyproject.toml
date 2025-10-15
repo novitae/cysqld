@@ -1,6 +1,6 @@
 [project]
 name = "cysqld"
-version = "0.0.11b"
+version = "0.0.12b"
 description = "Add your description here"
 readme = "README.md"
 requires-python = ">=3.11"
